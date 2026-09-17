@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../domain/models.dart';
 import '../camera/inspection_photo_grid.dart';
+import '../reports/report_preview_screen.dart';
 import '../reviews/review_inspection_screen.dart';
 import 'inspection_bloc.dart';
 
@@ -118,6 +119,12 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
         actions: inspection == null
             ? null
             : [
+                IconButton(
+                  key: const Key('inspection-report-button'),
+                  tooltip: 'Generate report',
+                  onPressed: () => _openReport(inspection),
+                  icon: const Icon(Icons.picture_as_pdf_outlined),
+                ),
                 IconButton(
                   key: const Key('review-inspection-button'),
                   tooltip: 'Review inspection',
@@ -266,12 +273,12 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
     });
   }
 
-  void _flushComments() {
+  Future<void> _flushComments() async {
     _commentsTimer?.cancel();
     final item = _currentItem;
     if (item != null && _commentsController.text != _lastPersistedComments) {
       _lastPersistedComments = _commentsController.text;
-      unawaited(_bloc?.setComments(item.id, _commentsController.text));
+      await _bloc?.setComments(item.id, _commentsController.text);
     }
   }
 
@@ -281,7 +288,7 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
   }
 
   void _goToIndex(int index) {
-    _flushComments();
+    unawaited(_flushComments());
     final inspection = _bloc!.activeInspection;
     final nextItem = _bloc!.template.items[index];
     final comments = inspection?.responseFor(nextItem.id)?.comments ?? '';
@@ -293,10 +300,21 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
   }
 
   Future<void> _openReview(Inspection inspection) async {
-    _flushComments();
+    await _flushComments();
+    if (!mounted) return;
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => ReviewInspectionScreen(inspectionId: inspection.id),
+      ),
+    );
+  }
+
+  Future<void> _openReport(Inspection inspection) async {
+    await _flushComments();
+    if (!mounted) return;
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => ReportPreviewScreen(inspectionId: inspection.id),
       ),
     );
   }

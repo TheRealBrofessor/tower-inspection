@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../domain/models.dart';
 import '../inspections/inspection_bloc.dart';
 import '../inspections/inspection_detail_screen.dart';
+import '../reports/report_preview_screen.dart';
 import 'review_findings.dart';
 
 class ReviewInspectionScreen extends StatefulWidget {
@@ -105,6 +106,9 @@ class _ReviewInspectionScreenState extends State<ReviewInspectionScreen> {
               ],
             ),
           ),
+          if (inspection.status == InspectionStatus.readyForReview ||
+              inspection.status == InspectionStatus.completed)
+            _ReportAction(onPressed: () => _openReport(inspection)),
           _StatusAction(
             inspection: inspection,
             hasErrors: errorCount > 0,
@@ -160,6 +164,13 @@ class _ReviewInspectionScreenState extends State<ReviewInspectionScreen> {
       ),
     );
   }
+
+  Future<void> _openReport(Inspection inspection) =>
+      Navigator.of(context).push<void>(
+        MaterialPageRoute<void>(
+          builder: (_) => ReportPreviewScreen(inspectionId: inspection.id),
+        ),
+      );
 }
 
 class _ReviewSummary extends StatelessWidget {
@@ -291,6 +302,34 @@ class _StatusAction extends StatelessWidget {
                   )
                 : Icon(isReady ? Icons.task_alt : Icons.fact_check_outlined),
             label: Text(label),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ReportAction extends StatelessWidget {
+  const _ReportAction({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      child: SafeArea(
+        top: false,
+        bottom: false,
+        minimum: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+        child: SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: FilledButton.icon(
+            key: const Key('open-report-button'),
+            onPressed: onPressed,
+            icon: const Icon(Icons.picture_as_pdf_outlined),
+            label: const Text('GENERATE REPORT'),
           ),
         ),
       ),

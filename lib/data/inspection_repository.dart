@@ -385,6 +385,37 @@ class InspectionRepository {
     return inspections;
   }
 
+  Future<void> saveReport(Report report) async {
+    final database = await _appDatabase.database;
+    await database.insert('reports', {
+      'id': report.id,
+      'inspection_id': report.inspectionId,
+      'file_path': report.filePath,
+      'created_at': report.createdAt.toUtc().toIso8601String(),
+      'metadata_json': jsonEncode(report.metadata),
+    });
+  }
+
+  Future<List<Report>> listReports(String inspectionId) async {
+    final database = await _appDatabase.database;
+    final rows = await database.query(
+      'reports',
+      where: 'inspection_id = ?',
+      whereArgs: [inspectionId],
+      orderBy: 'created_at DESC',
+    );
+    return [
+      for (final row in rows)
+        Report(
+          id: row['id']! as String,
+          inspectionId: row['inspection_id']! as String,
+          filePath: row['file_path']! as String,
+          createdAt: DateTime.parse(row['created_at']! as String),
+          metadata: _decodeMetadata(row['metadata_json']! as String),
+        ),
+    ];
+  }
+
   Inspection _inspectionFromRow(
     Map<String, Object?> row,
     List<InspectionItemResponse> responses,
