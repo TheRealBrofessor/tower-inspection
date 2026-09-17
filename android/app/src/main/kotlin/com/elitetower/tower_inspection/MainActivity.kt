@@ -1,0 +1,5 @@
+package com.elitetower.tower_inspection
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()

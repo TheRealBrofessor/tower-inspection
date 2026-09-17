@@ -1,0 +1,516 @@
+{
+  "templateVersion": "1.0.0",
+  "reportTitle": "Tower Site Inspection Report",
+  "contractor": {
+    "name": "Elite Tower, LLC",
+    "address": "PO Box 30249",
+    "cityStateZip": "Savannah, GA 31410"
+  },
+  "headerConvention": {
+    "left": "Harmony Remote",
+    "asrLabel": "ASR: {asr}",
+    "pageLabel": "Page"
+  },
+  "siteInfoFields": [
+    {
+      "id": "siteName",
+      "label": "Site Name",
+      "example": "Site name"
+    },
+    {
+      "id": "asr",
+      "label": "ASR",
+      "example": "123456",
+      "numeric": true
+    },
+    {
+      "id": "preparedFor",
+      "label": "Prepared for",
+      "example": "Motorola"
+    },
+    {
+      "id": "inspectionDate",
+      "label": "Date of Inspection",
+      "example": "1/1/2025",
+      "type": "date"
+    }
+  ],
+  "defaultStatuses": [
+    "Okay",
+    "Possible Improvement",
+    "Needs Repair",
+    "Not Applicable"
+  ],
+  "sections": [
+    {
+      "id": "A",
+      "title": "A.  STRUCTURE CONDITION",
+      "items": [
+        {
+          "id": "A.1",
+          "title": "Rust",
+          "instruction": "Check structure for rust",
+          "fullLabel": "A.1 Rust - Check structure for rust.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": true,
+          "photoBlocks": [
+            {
+              "blockId": "A.1.1",
+              "label": "A.1.1 Rust - Photographs",
+              "continued": false
+            },
+            {
+              "blockId": "A.1.2",
+              "label": "A.1.2 Rust \u2013 Photographs (Continued)",
+              "continued": true
+            }
+          ],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        },
+        {
+          "id": "A.2",
+          "title": "Cross Members",
+          "instruction": "Check for damaged or missing cross members",
+          "fullLabel": "A.2 Cross Members - Check for damaged or missing cross members.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": true,
+          "photoBlocks": [
+            {
+              "blockId": "A.2.1",
+              "label": "A.2.1 Cross Members \u2013 Photographs",
+              "continued": false
+            },
+            {
+              "blockId": "A.2.2",
+              "label": "A.2.2 Cross Members \u2013 Photographs (Continued)",
+              "continued": true
+            }
+          ],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        },
+        {
+          "id": "A.3",
+          "title": "Safety Climb",
+          "instruction": "Check safety climb for damage",
+          "fullLabel": "A.3 Safety Climb - Check safety climb for damage.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": true,
+          "photoBlocks": [
+            {
+              "blockId": "A.3.1",
+              "label": "A.3.1 Safety Climb \u2013 Photographs",
+              "continued": false
+            },
+            {
+              "blockId": "A.3.2",
+              "label": "A.3.2 Safety Climb \u2013 Photographs (Continued)",
+              "continued": true
+            }
+          ],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        },
+        {
+          "id": "A.4",
+          "title": "Ladder",
+          "instruction": "Verify that ladder system is secured to tower",
+          "fullLabel": "A.4 Ladder - Verify that ladder system is secured to tower.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": false,
+          "photoBlocks": [],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": "Ladder is integrated into Cross member design of tower and welded."
+        },
+        {
+          "id": "A.5",
+          "title": "Welds",
+          "instruction": "Check for cracks or damaged welds",
+          "fullLabel": "A.5 Welds - Check for cracks or damaged welds.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": true,
+          "photoBlocks": [
+            {
+              "blockId": "A.5.1",
+              "label": "A.5.1 Welds - Photographs",
+              "continued": false
+            }
+          ],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        },
+        {
+          "id": "A.6",
+          "title": "Outdoor Lighting/Photocell",
+          "instruction": "Test outdoor lighting and photocell",
+          "fullLabel": "A.6 Outdoor Lighting/Photocell - Test outdoor lighting and photocell.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": true,
+          "photoBlocks": [
+            {
+              "blockId": "A.6.1",
+              "label": "A.6.1 Outdoor Lighting/Photocell - Photographs",
+              "continued": false
+            }
+          ],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        },
+        {
+          "id": "A.7",
+          "title": "Drainage Holes",
+          "instruction": "Check that drainage holes are clear of debris",
+          "fullLabel": "A.7 Drainage Holes - Check that drainage holes are clear of debris.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": false,
+          "photoBlocks": [],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        },
+        {
+          "id": "A.8",
+          "title": "Paint",
+          "instruction": "Check paint condition",
+          "fullLabel": "A.8 Paint - Check paint condition.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": false,
+          "photoBlocks": [],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        }
+      ]
+    },
+    {
+      "id": "B",
+      "title": "B.  TOWER LIGHTING",
+      "items": [
+        {
+          "id": "B.1",
+          "title": "Lights/Markers",
+          "instruction": "Verify all lights/markers are operational",
+          "fullLabel": "B.1 Lights/Markers - Verify all lights/markers are operational.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": true,
+          "photoBlocks": [
+            {
+              "blockId": "B.1.1",
+              "label": "B.1.1 Lights/Markers - Photographs",
+              "continued": false
+            }
+          ],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        },
+        {
+          "id": "B.2",
+          "title": "Day/Night Mode",
+          "instruction": "Verify day and night mode operation",
+          "fullLabel": "B.2 Day/Night Mode - Verify day and night mode operation.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": false,
+          "photoBlocks": [],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        },
+        {
+          "id": "B.3",
+          "title": "Power Cabling",
+          "instruction": "Verify that power cables are secured to tower",
+          "fullLabel": "B.3 Power Cabling - Verify that power cables are secured to tower.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": true,
+          "photoBlocks": [
+            {
+              "blockId": "B.3.1",
+              "label": "B.3.1 Power Cabling - Photographs",
+              "continued": false
+            },
+            {
+              "blockId": "B.3.2",
+              "label": "B.3.2 Power Cabling - Photographs (Continued)",
+              "continued": true
+            }
+          ],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        }
+      ]
+    },
+    {
+      "id": "C",
+      "title": "C.  ANTENNAS AND LINES",
+      "items": [
+        {
+          "id": "C.1",
+          "title": "TX Antennas",
+          "instruction": "Visually inspect antennas for physical damage",
+          "fullLabel": "C.1 TX Antennas - Visually inspect antennas for physical damage.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": true,
+          "photoBlocks": [
+            {
+              "blockId": "C.1.1",
+              "label": "C.1.1 TX Antennas - Photographs",
+              "continued": false
+            },
+            {
+              "blockId": "C.1.2",
+              "label": "C.1.2 TX Antennas - Photographs (Continued)",
+              "continued": true
+            }
+          ],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        },
+        {
+          "id": "C.2",
+          "title": "RX Antennas",
+          "instruction": "Visually inspect antennas for physical damage",
+          "fullLabel": "C.2 RX Antennas - Visually inspect antennas for physical damage.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": true,
+          "photoBlocks": [
+            {
+              "blockId": "C.2.1",
+              "label": "C.2.1 RX Antennas - Photographs",
+              "continued": false
+            },
+            {
+              "blockId": "C.2.2",
+              "label": "C.2.2 RX Antennas - Photographs (Continued)",
+              "continued": true
+            }
+          ],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        },
+        {
+          "id": "C.3",
+          "title": "TX Lines",
+          "instruction": "Verify that all transmission lines are secure on the tower",
+          "fullLabel": "C.3 TX Lines - Verify that all transmission lines are secure on the tower.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": true,
+          "photoBlocks": [
+            {
+              "blockId": "C.3.1",
+              "label": "C.3.1 TX Lines - Photographs",
+              "continued": false
+            },
+            {
+              "blockId": "C.3.2",
+              "label": "C.3.2 TX Lines - Photographs (Continued)",
+              "continued": true
+            }
+          ],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        },
+        {
+          "id": "C.4",
+          "title": "RX Lines",
+          "instruction": "Verify that all transmission lines are secure on the tower",
+          "fullLabel": "C.4 RX Lines - Verify that all transmission lines are secure on the tower.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": true,
+          "photoBlocks": [
+            {
+              "blockId": "C.4.1",
+              "label": "C.4.1 RX Lines - Photographs",
+              "continued": false
+            },
+            {
+              "blockId": "C.4.2",
+              "label": "C.4.2 RX Lines - Photographs (Continued)",
+              "continued": true
+            }
+          ],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        },
+        {
+          "id": "C.5",
+          "title": "Preamplifier",
+          "instruction": "Visually inspect preamplifier for physical damage",
+          "fullLabel": "C.5 Preamplifier - Visually inspect preamplifier for physical damage.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": true,
+          "photoBlocks": [
+            {
+              "blockId": "C.5.1",
+              "label": "C.5.1 Preamplifier - Photographs",
+              "continued": false
+            },
+            {
+              "blockId": "C.5.2",
+              "label": "C.5.2 Preamplifier - Photographs (Continued)",
+              "continued": true
+            }
+          ],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        }
+      ]
+    },
+    {
+      "id": "D",
+      "title": "D.  GROUNDING",
+      "items": [
+        {
+          "id": "D.1",
+          "title": "Structure Grounds",
+          "instruction": "Inspect grounding for damage or corrosion",
+          "fullLabel": "D.1 Structure Grounds - Inspect grounding for damage or corrosion.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": true,
+          "photoBlocks": [
+            {
+              "blockId": "D.1.1",
+              "label": "D.1.1 Structure Grounds - Photographs",
+              "continued": false
+            },
+            {
+              "blockId": "D.1.2",
+              "label": "D.1.2 Structure Grounds - Photographs (Continued)",
+              "continued": true
+            }
+          ],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        }
+      ]
+    },
+    {
+      "id": "E",
+      "title": "E.  CONCRETE CONDITION",
+      "items": [
+        {
+          "id": "E.1",
+          "title": "Tower Base",
+          "instruction": "Check for chips or cracks",
+          "fullLabel": "E.1 Tower Base - Check for chips or cracks.",
+          "statuses": [
+            "Okay",
+            "Possible Improvement",
+            "Needs Repair",
+            "Not Applicable"
+          ],
+          "photosEnabled": true,
+          "photoBlocks": [
+            {
+              "blockId": "E.1.1",
+              "label": "E.1.1 Tower Base - Photographs",
+              "continued": false
+            }
+          ],
+          "defaultPhotoSlots": 3,
+          "commentsEnabled": true,
+          "prefilledObservation": ""
+        }
+      ]
+    }
+  ]
+}
