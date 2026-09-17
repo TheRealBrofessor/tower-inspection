@@ -7,9 +7,11 @@
     "cityStateZip": "Savannah, GA 31410"
   },
   "headerConvention": {
-    "left": "Harmony Remote",
+    "leftSource": "siteName",
+    "dateSource": "inspectionDate",
     "asrLabel": "ASR: {asr}",
-    "pageLabel": "Page"
+    "pageLabel": "Page",
+    "note": "Blank form header contains example data (Harmony Remote / 1322046). Report renderer must substitute live inspection values."
   },
   "siteInfoFields": [
     {
@@ -27,6 +29,12 @@
       "id": "preparedFor",
       "label": "Prepared for",
       "example": "Motorola"
+    },
+    {
+      "id": "address",
+      "label": "Address",
+      "example": "Cedartown, GA 30125",
+      "optional": true
     },
     {
       "id": "inspectionDate",
