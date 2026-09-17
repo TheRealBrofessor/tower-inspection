@@ -53,6 +53,18 @@ class InspectionListScreen extends StatelessWidget {
               ),
               const SizedBox(height: 28),
               _InspectionGroup(
+                title: 'IN PROGRESS',
+                inspections: bloc.inProgress,
+                emptyMessage: 'Inspections underway will appear here.',
+              ),
+              const SizedBox(height: 28),
+              _InspectionGroup(
+                title: 'READY FOR REVIEW',
+                inspections: bloc.readyForReview,
+                emptyMessage: 'Inspections awaiting review will appear here.',
+              ),
+              const SizedBox(height: 28),
+              _InspectionGroup(
                 title: 'COMPLETED',
                 inspections: bloc.completed,
                 emptyMessage: 'Completed inspections will appear here.',
@@ -190,13 +202,7 @@ class _InspectionRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Chip(
-                label: Text(
-                  inspection.status == Inspection.completedStatus
-                      ? 'Completed'
-                      : 'Draft',
-                ),
-              ),
+              Chip(label: Text(inspection.status.label)),
             ],
           ),
         ),

@@ -51,7 +51,14 @@ void main() {
 
     expect(find.text('A.1 Rust - Check structure for rust.'), findsOneWidget);
     expect(find.text('☐ Okay'), findsOneWidget);
+    expect(find.text('TAP TO TAKE PHOTO'), findsNWidgets(3));
     expect(find.byKey(const Key('add-photo-button')), findsOneWidget);
+
+    await tester.ensureVisible(find.byKey(const Key('add-photo-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('add-photo-button')));
+    await tester.pump();
+    expect(find.text('TAP TO TAKE PHOTO'), findsNWidgets(4));
 
     await tester.ensureVisible(find.byKey(const Key('status-Okay')));
     await tester.pumpAndSettle();
@@ -79,14 +86,14 @@ void main() {
 }
 
 class _FakeInspectionRepository extends InspectionRepository {
-  _FakeInspectionRepository()
-    : super(AppDatabase(factory: databaseFactoryFfi));
+  _FakeInspectionRepository() : super(AppDatabase(factory: databaseFactoryFfi));
 
   Inspection? _inspection;
 
   @override
-  Future<List<Inspection>> listInspectionsByStatus(String status) async =>
-      _inspection?.status == status ? [_inspection!] : [];
+  Future<List<Inspection>> listInspectionsByStatus(
+    InspectionStatus status,
+  ) async => _inspection?.status == status ? [_inspection!] : [];
 
   @override
   Future<Inspection> createInspection(InspectionTemplate template) async {

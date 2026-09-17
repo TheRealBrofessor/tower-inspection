@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Capture inspection photos for tower condition reports.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Select replacement photos for tower condition reports.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

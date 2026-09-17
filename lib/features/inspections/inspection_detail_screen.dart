@@ -1,14 +1,12 @@
 import 'dart:async';
-import 'dart:io';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
-import '../../data/photo_storage.dart';
 import '../../domain/models.dart';
+import '../camera/inspection_photo_grid.dart';
+import '../reviews/review_inspection_screen.dart';
 import 'inspection_bloc.dart';
 
 class InspectionDetailScreen extends StatefulWidget {
@@ -28,8 +26,6 @@ class InspectionDetailScreen extends StatefulWidget {
 }
 
 class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
-  final ImagePicker _imagePicker = ImagePicker();
-  final PhotoStorage _photoStorage = PhotoStorage();
   final TextEditingController _commentsController = TextEditingController();
   final Map<String, TextEditingController> _siteControllers = {};
   Timer? _commentsTimer;
@@ -119,6 +115,16 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
               ? inspection!.siteFields['siteName']!
               : 'Inspection',
         ),
+        actions: inspection == null
+            ? null
+            : [
+                IconButton(
+                  key: const Key('review-inspection-button'),
+                  tooltip: 'Review inspection',
+                  onPressed: () => _openReview(inspection),
+                  icon: const Icon(Icons.fact_check_outlined),
+                ),
+              ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(3),
           child: LinearProgressIndicator(
@@ -214,12 +220,12 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 10),
-              _PhotoGrid(
+              InspectionPhotoGrid(
+                key: ValueKey('photo-grid-${item.id}'),
+                inspectionId: inspection.id,
+                item: item,
                 photos: response.photos,
-                defaultSlots: item.defaultPhotoSlots,
-                onCapture: () => _capturePhoto(bloc, item),
-                onDelete: (photo) =>
-                    unawaited(_deletePhoto(bloc, item.id, photo)),
+                bloc: bloc,
               ),
             ],
             if (item.commentsEnabled) ...[
@@ -286,43 +292,11 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
     });
   }
 
-  Future<void> _capturePhoto(InspectionBloc bloc, InspectionItem item) async {
-    try {
-      final image = await _imagePicker.pickImage(
-        source: ImageSource.camera,
-        imageQuality: 90,
-      );
-      if (image == null) return;
-      final paths = await _photoStorage.preserve(
-        inspectionId: widget.inspectionId,
-        itemId: item.id,
-        sourcePath: image.path,
-      );
-      await bloc.addPhoto(
-        item.id,
-        paths.originalPath,
-        reportPath: paths.reportPath,
-      );
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Camera unavailable. Check camera permissions.'),
-        ),
-      );
-    }
-  }
-
-  Future<void> _deletePhoto(
-    InspectionBloc bloc,
-    String itemId,
-    PhotoAttachment photo,
-  ) async {
-    await bloc.deletePhoto(itemId, photo.id);
-    await _photoStorage.delete(
-      StoredPhotoPaths(
-        originalPath: photo.originalPath,
-        reportPath: photo.reportPath,
+  Future<void> _openReview(Inspection inspection) async {
+    _flushComments();
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute<void>(
+        builder: (_) => ReviewInspectionScreen(inspectionId: inspection.id),
       ),
     );
   }
@@ -482,137 +456,6 @@ class _StatusSelector extends StatelessWidget {
             ),
           ),
       ],
-    );
-  }
-}
-
-class _PhotoGrid extends StatelessWidget {
-  const _PhotoGrid({
-    required this.photos,
-    required this.defaultSlots,
-    required this.onCapture,
-    required this.onDelete,
-  });
-
-  final List<PhotoAttachment> photos;
-  final int defaultSlots;
-  final VoidCallback onCapture;
-  final ValueChanged<PhotoAttachment> onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    final emptySlots = math.max(0, defaultSlots - photos.length);
-    final itemCount = photos.length + emptySlots + 1;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 720 ? 4 : 3;
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columns,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-          ),
-          itemCount: itemCount,
-          itemBuilder: (context, index) {
-            if (index < photos.length) {
-              final photo = photos[index];
-              return _PhotoTile(photo: photo, onDelete: onDelete);
-            }
-            if (index < photos.length + emptySlots) {
-              return _CaptureTile(
-                key: Key('empty-photo-slot-$index'),
-                label: 'PHOTO ${index + 1}',
-                onTap: onCapture,
-              );
-            }
-            return _CaptureTile(
-              key: const Key('add-photo-button'),
-              label: '+ ADD PHOTO',
-              onTap: onCapture,
-              emphasized: true,
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
-class _PhotoTile extends StatelessWidget {
-  const _PhotoTile({required this.photo, required this.onDelete});
-
-  final PhotoAttachment photo;
-  final ValueChanged<PhotoAttachment> onDelete;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(6),
-          child: Image.file(
-            File(photo.reportPath),
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => ColoredBox(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              child: const Icon(Icons.broken_image_outlined),
-            ),
-          ),
-        ),
-        Positioned(
-          top: 4,
-          right: 4,
-          child: IconButton.filled(
-            tooltip: 'Delete photo',
-            onPressed: () => onDelete(photo),
-            icon: const Icon(Icons.delete_outline),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _CaptureTile extends StatelessWidget {
-  const _CaptureTile({
-    super.key,
-    required this.label,
-    required this.onTap,
-    this.emphasized = false,
-  });
-
-  final String label;
-  final VoidCallback onTap;
-  final bool emphasized;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Material(
-      color: emphasized ? colors.primaryContainer : colors.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(6),
-        side: BorderSide(color: colors.outlineVariant),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.add_a_photo_outlined),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelMedium,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

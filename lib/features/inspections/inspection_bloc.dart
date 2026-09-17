@@ -10,6 +10,8 @@ class InspectionBloc extends ChangeNotifier {
   final InspectionRepository repository;
 
   List<Inspection> drafts = const [];
+  List<Inspection> inProgress = const [];
+  List<Inspection> readyForReview = const [];
   List<Inspection> completed = const [];
   Inspection? activeInspection;
   bool isLoading = false;
@@ -21,10 +23,14 @@ class InspectionBloc extends ChangeNotifier {
     try {
       final results = await Future.wait([
         repository.listInspectionsByStatus(Inspection.draftStatus),
+        repository.listInspectionsByStatus(Inspection.inProgressStatus),
+        repository.listInspectionsByStatus(Inspection.readyForReviewStatus),
         repository.listInspectionsByStatus(Inspection.completedStatus),
       ]);
       drafts = results[0];
-      completed = results[1];
+      inProgress = results[1];
+      readyForReview = results[2];
+      completed = results[3];
       lastError = null;
     } catch (error) {
       lastError = error;
@@ -66,6 +72,7 @@ class InspectionBloc extends ChangeNotifier {
     fields[fieldId] = value;
     activeInspection = inspection.copyWith(
       siteFields: fields,
+      status: _statusAfterEdit(inspection.status),
       updatedAt: DateTime.now().toUtc(),
     );
     _replaceInLists(activeInspection!);
@@ -102,13 +109,13 @@ class InspectionBloc extends ChangeNotifier {
     }
   }
 
-  Future<void> addPhoto(
+  Future<bool> addPhoto(
     String itemId,
     String originalPath, {
     String? reportPath,
   }) async {
     final inspection = activeInspection;
-    if (inspection == null) return;
+    if (inspection == null) return false;
     try {
       final photo = await repository.addPhoto(
         inspectionId: inspection.id,
@@ -120,53 +127,131 @@ class InspectionBloc extends ChangeNotifier {
         itemId,
         (response) => response.copyWith(photos: [...response.photos, photo]),
       );
+      return true;
     } catch (error) {
       _recordError(error);
+      return false;
     }
   }
 
-  Future<void> deletePhoto(String itemId, String photoId) async {
+  Future<bool> deletePhoto(String itemId, String photoId) async {
     final inspection = activeInspection;
-    if (inspection == null) return;
+    if (inspection == null) return false;
     final response = inspection.responseFor(itemId);
-    if (response == null) return;
+    if (response == null) return false;
     final remaining = response.photos
         .where((photo) => photo.id != photoId)
         .toList(growable: false);
-    _updateResponse(
-      itemId,
-      (current) => current.copyWith(
-        photos: [
-          for (var index = 0; index < remaining.length; index++)
-            remaining[index].copyWith(orderIndex: index),
-        ],
-      ),
-    );
     try {
       await repository.deletePhoto(photoId);
+      _updateResponse(
+        itemId,
+        (current) => current.copyWith(
+          photos: [
+            for (var index = 0; index < remaining.length; index++)
+              remaining[index].copyWith(orderIndex: index),
+          ],
+        ),
+      );
+      return true;
     } catch (error) {
       _recordError(error);
+      return false;
     }
   }
 
-  Future<void> reorderPhotos(String itemId, List<String> photoIds) async {
+  Future<bool> reorderPhotos(String itemId, List<String> photoIds) async {
     final inspection = activeInspection;
     final response = inspection?.responseFor(itemId);
-    if (inspection == null || response == null) return;
+    if (inspection == null || response == null) return false;
     final byId = {for (final photo in response.photos) photo.id: photo};
-    _updateResponse(
-      itemId,
-      (current) => current.copyWith(
-        photos: [
-          for (var index = 0; index < photoIds.length; index++)
-            byId[photoIds[index]]!.copyWith(orderIndex: index),
-        ],
-      ),
-    );
     try {
       await repository.reorderPhotos(inspection.id, itemId, photoIds);
+      _updateResponse(
+        itemId,
+        (current) => current.copyWith(
+          photos: [
+            for (var index = 0; index < photoIds.length; index++)
+              byId[photoIds[index]]!.copyWith(orderIndex: index),
+          ],
+        ),
+      );
+      return true;
     } catch (error) {
       _recordError(error);
+      return false;
+    }
+  }
+
+  Future<bool> replacePhoto(
+    String itemId,
+    PhotoAttachment current,
+    String originalPath,
+    String reportPath,
+  ) async {
+    try {
+      final replacement = await repository.replacePhoto(
+        photoId: current.id,
+        originalPath: originalPath,
+        reportPath: reportPath,
+      );
+      _updateResponse(
+        itemId,
+        (response) => response.copyWith(
+          photos: [
+            for (final photo in response.photos)
+              if (photo.id == current.id) replacement else photo,
+          ],
+        ),
+      );
+      return true;
+    } catch (error) {
+      _recordError(error);
+      return false;
+    }
+  }
+
+  Future<bool> markReadyForReview() async {
+    final inspection = activeInspection;
+    if (inspection == null) return false;
+    try {
+      var status = inspection.status;
+      if (status == InspectionStatus.draft) {
+        await repository.updateInspectionStatus(
+          inspection.id,
+          InspectionStatus.inProgress,
+        );
+        status = InspectionStatus.inProgress;
+      }
+      if (status != InspectionStatus.inProgress) return false;
+      await repository.updateInspectionStatus(
+        inspection.id,
+        InspectionStatus.readyForReview,
+      );
+      _setActiveStatus(InspectionStatus.readyForReview);
+      return true;
+    } catch (error) {
+      _recordError(error);
+      return false;
+    }
+  }
+
+  Future<bool> markCompleted() async {
+    final inspection = activeInspection;
+    if (inspection == null ||
+        inspection.status != InspectionStatus.readyForReview) {
+      return false;
+    }
+    try {
+      await repository.updateInspectionStatus(
+        inspection.id,
+        InspectionStatus.completed,
+      );
+      _setActiveStatus(InspectionStatus.completed);
+      return true;
+    } catch (error) {
+      _recordError(error);
+      return false;
     }
   }
 
@@ -181,6 +266,7 @@ class InspectionBloc extends ChangeNotifier {
         if (response.itemId == itemId) update(response) else response,
     ];
     activeInspection = inspection.copyWith(
+      status: _statusAfterEdit(inspection.status),
       responses: responses,
       updatedAt: DateTime.now().toUtc(),
     );
@@ -189,14 +275,46 @@ class InspectionBloc extends ChangeNotifier {
   }
 
   void _replaceInLists(Inspection inspection) {
+    final all = {
+      for (final item in [
+        ...drafts,
+        ...inProgress,
+        ...readyForReview,
+        ...completed,
+      ])
+        item.id: item,
+      inspection.id: inspection,
+    }.values;
     drafts = [
-      for (final item in drafts)
-        if (item.id == inspection.id) inspection else item,
+      for (final item in all)
+        if (item.status == InspectionStatus.draft) item,
+    ];
+    inProgress = [
+      for (final item in all)
+        if (item.status == InspectionStatus.inProgress) item,
+    ];
+    readyForReview = [
+      for (final item in all)
+        if (item.status == InspectionStatus.readyForReview) item,
     ];
     completed = [
-      for (final item in completed)
-        if (item.id == inspection.id) inspection else item,
+      for (final item in all)
+        if (item.status == InspectionStatus.completed) item,
     ];
+  }
+
+  InspectionStatus _statusAfterEdit(InspectionStatus status) =>
+      status == InspectionStatus.draft ? InspectionStatus.inProgress : status;
+
+  void _setActiveStatus(InspectionStatus status) {
+    final inspection = activeInspection;
+    if (inspection == null) return;
+    activeInspection = inspection.copyWith(
+      status: status,
+      updatedAt: DateTime.now().toUtc(),
+    );
+    _replaceInLists(activeInspection!);
+    notifyListeners();
   }
 
   void _recordError(Object error) {

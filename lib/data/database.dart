@@ -5,7 +5,7 @@ class AppDatabase {
   AppDatabase({sqflite.DatabaseFactory? factory, this.databasePath})
     : _factory = factory ?? sqflite.databaseFactory;
 
-  static const currentVersion = 1;
+  static const currentVersion = 2;
 
   final sqflite.DatabaseFactory _factory;
   final String? databasePath;
@@ -124,6 +124,15 @@ class AppDatabase {
       ''');
       await database.insert('schema_version', {
         'version': 1,
+        'applied_at': DateTime.now().toUtc().toIso8601String(),
+      });
+    }
+    if (oldVersion < 2 && newVersion >= 2) {
+      await database.execute(
+        "ALTER TABLE inspections ADD COLUMN address TEXT NOT NULL DEFAULT ''",
+      );
+      await database.insert('schema_version', {
+        'version': 2,
         'applied_at': DateTime.now().toUtc().toIso8601String(),
       });
     }

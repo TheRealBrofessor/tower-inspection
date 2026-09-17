@@ -41,8 +41,9 @@ class InspectionRepository {
         'site_name': siteFields['siteName'] ?? '',
         'asr': siteFields['asr'] ?? '',
         'prepared_for': siteFields['preparedFor'] ?? '',
+        'address': siteFields['address'] ?? '',
         'inspection_date': siteFields['inspectionDate'] ?? '',
-        'status': Inspection.draftStatus,
+        'status': Inspection.draftStatus.databaseValue,
         'created_at': timestamp,
         'updated_at': timestamp,
       });
@@ -113,20 +114,23 @@ class InspectionRepository {
     String value,
   ) async {
     final database = await _appDatabase.database;
-    final timestamp = _timestamp();
-    final values = switch (fieldId) {
-      'siteName' => {'site_name': value, 'updated_at': timestamp},
-      'asr' => {'asr': value, 'updated_at': timestamp},
-      'preparedFor' => {'prepared_for': value, 'updated_at': timestamp},
-      'inspectionDate' => {'inspection_date': value, 'updated_at': timestamp},
+    final column = switch (fieldId) {
+      'siteName' => 'site_name',
+      'asr' => 'asr',
+      'preparedFor' => 'prepared_for',
+      'address' => 'address',
+      'inspectionDate' => 'inspection_date',
       _ => throw ArgumentError.value(fieldId, 'fieldId', 'Unknown site field'),
     };
-    await database.update(
-      'inspections',
-      values,
-      where: 'id = ?',
-      whereArgs: [inspectionId],
-    );
+    await database.transaction((transaction) async {
+      await transaction.update(
+        'inspections',
+        {column: value},
+        where: 'id = ?',
+        whereArgs: [inspectionId],
+      );
+      await _touch(transaction, inspectionId, markInProgress: true);
+    });
   }
 
   Future<void> setStatus(
@@ -142,7 +146,7 @@ class InspectionRepository {
         where: 'inspection_id = ? AND item_id = ?',
         whereArgs: [inspectionId, itemId],
       );
-      await _touch(transaction, inspectionId);
+      await _touch(transaction, inspectionId, markInProgress: true);
     });
   }
 
@@ -159,7 +163,7 @@ class InspectionRepository {
         where: 'inspection_id = ? AND item_id = ?',
         whereArgs: [inspectionId, itemId],
       );
-      await _touch(transaction, inspectionId);
+      await _touch(transaction, inspectionId, markInProgress: true);
     });
   }
 
@@ -202,7 +206,7 @@ class InspectionRepository {
         'captured_at': attachment.capturedAt.toIso8601String(),
         'metadata_json': jsonEncode(attachment.metadata),
       });
-      await _touch(transaction, inspectionId);
+      await _touch(transaction, inspectionId, markInProgress: true);
       return attachment;
     });
     return photo;
@@ -241,7 +245,7 @@ class InspectionRepository {
           whereArgs: [remaining[index]['id']],
         );
       }
-      await _touch(transaction, inspectionId);
+      await _touch(transaction, inspectionId, markInProgress: true);
     });
   }
 
@@ -281,16 +285,96 @@ class InspectionRepository {
           whereArgs: [photoIds[index]],
         );
       }
-      await _touch(transaction, inspectionId);
+      await _touch(transaction, inspectionId, markInProgress: true);
     });
   }
 
-  Future<List<Inspection>> listInspectionsByStatus(String status) async {
+  Future<PhotoAttachment> replacePhoto({
+    required String photoId,
+    required String originalPath,
+    required String reportPath,
+    DateTime? capturedAt,
+    JsonMap metadata = const <String, dynamic>{},
+  }) async {
+    final database = await _appDatabase.database;
+    return database.transaction((transaction) async {
+      final rows = await transaction.query(
+        'photo_attachments',
+        where: 'id = ?',
+        whereArgs: [photoId],
+        limit: 1,
+      );
+      if (rows.isEmpty) {
+        throw StateError('Photo $photoId no longer exists.');
+      }
+      final current = _photoFromRow(rows.single);
+      final replacement = PhotoAttachment(
+        id: current.id,
+        inspectionId: current.inspectionId,
+        itemId: current.itemId,
+        orderIndex: current.orderIndex,
+        originalPath: originalPath,
+        reportPath: reportPath,
+        capturedAt: (capturedAt ?? _now()).toUtc(),
+        metadata: metadata,
+      );
+      await transaction.update(
+        'photo_attachments',
+        {
+          'original_path': replacement.originalPath,
+          'report_path': replacement.reportPath,
+          'captured_at': replacement.capturedAt.toIso8601String(),
+          'metadata_json': jsonEncode(replacement.metadata),
+        },
+        where: 'id = ?',
+        whereArgs: [photoId],
+      );
+      await _touch(transaction, replacement.inspectionId, markInProgress: true);
+      return replacement;
+    });
+  }
+
+  Future<void> updateInspectionStatus(
+    String inspectionId,
+    InspectionStatus status,
+  ) async {
+    final database = await _appDatabase.database;
+    await database.transaction((transaction) async {
+      final rows = await transaction.query(
+        'inspections',
+        columns: ['status'],
+        where: 'id = ?',
+        whereArgs: [inspectionId],
+        limit: 1,
+      );
+      if (rows.isEmpty) throw StateError('Inspection $inspectionId not found.');
+      final current = InspectionStatus.fromDatabase(
+        rows.single['status']! as String,
+      );
+      if (current == status) return;
+      if (current.next != status) {
+        throw StateError(
+          'Invalid inspection status transition: '
+          '${current.databaseValue} -> ${status.databaseValue}.',
+        );
+      }
+      await transaction.update(
+        'inspections',
+        {'status': status.databaseValue, 'updated_at': _timestamp()},
+        where: 'id = ?',
+        whereArgs: [inspectionId],
+      );
+    });
+  }
+
+  Future<List<Inspection>> listInspectionsByStatus(
+    InspectionStatus status,
+  ) async {
     final database = await _appDatabase.database;
     final rows = await database.query(
       'inspections',
       where: 'status = ?',
-      whereArgs: [status],
+      whereArgs: [status.databaseValue],
       orderBy: 'updated_at DESC',
     );
     final inspections = <Inspection>[];
@@ -311,9 +395,10 @@ class InspectionRepository {
       'siteName': row['site_name']! as String,
       'asr': row['asr']! as String,
       'preparedFor': row['prepared_for']! as String,
+      'address': row['address']! as String,
       'inspectionDate': row['inspection_date']! as String,
     },
-    status: row['status']! as String,
+    status: InspectionStatus.fromDatabase(row['status']! as String),
     createdAt: DateTime.parse(row['created_at']! as String),
     updatedAt: DateTime.parse(row['updated_at']! as String),
     responses: responses,
@@ -337,11 +422,30 @@ class InspectionRepository {
 
   String _timestamp() => _now().toUtc().toIso8601String();
 
-  Future<void> _touch(DatabaseExecutor executor, String inspectionId) =>
-      executor.update(
+  Future<void> _touch(
+    DatabaseExecutor executor,
+    String inspectionId, {
+    bool markInProgress = false,
+  }) async {
+    final values = <String, Object?>{'updated_at': _timestamp()};
+    if (markInProgress) {
+      final rows = await executor.query(
         'inspections',
-        {'updated_at': _timestamp()},
+        columns: ['status'],
         where: 'id = ?',
         whereArgs: [inspectionId],
+        limit: 1,
       );
+      if (rows.isNotEmpty &&
+          rows.single['status'] == InspectionStatus.draft.databaseValue) {
+        values['status'] = InspectionStatus.inProgress.databaseValue;
+      }
+    }
+    await executor.update(
+      'inspections',
+      values,
+      where: 'id = ?',
+      whereArgs: [inspectionId],
+    );
+  }
 }

@@ -37,7 +37,10 @@ void main() {
       whereArgs: ['table', 'reports'],
     );
 
-    expect(versions.single['version'], AppDatabase.currentVersion);
+    expect(
+      versions.map((row) => row['version']),
+      contains(AppDatabase.currentVersion),
+    );
     expect(foreignKeys.single.values.single, 1);
     expect(reportTable, hasLength(1));
   });
@@ -77,6 +80,12 @@ void main() {
         secondPhoto.id,
         firstPhoto.id,
       ]);
+      await repository.replacePhoto(
+        photoId: firstPhoto.id,
+        originalPath: '/photos/replacement-original.jpg',
+        reportPath: '/photos/replacement-report.jpg',
+        capturedAt: DateTime.utc(2026, 9, 16, 14),
+      );
 
       var loaded = (await repository.getInspection(created.id))!;
       expect(loaded.siteFields['siteName'], 'Harmony Remote');
@@ -86,12 +95,16 @@ void main() {
         secondPhoto.id,
         firstPhoto.id,
       ]);
+      expect(
+        loaded.responseFor('A.1')!.photos.last.reportPath,
+        '/photos/replacement-report.jpg',
+      );
 
       await repository.deletePhoto(secondPhoto.id);
       loaded = (await repository.getInspection(created.id))!;
       expect(loaded.responseFor('A.1')!.photos.single.orderIndex, 0);
       expect(
-        await repository.listInspectionsByStatus(Inspection.draftStatus),
+        await repository.listInspectionsByStatus(Inspection.inProgressStatus),
         hasLength(1),
       );
       expect(
@@ -116,6 +129,36 @@ void main() {
         'metadata_json': '{}',
       }),
       throwsA(isA<DatabaseException>()),
+    );
+  });
+
+  test('inspection status follows the persisted lifecycle', () async {
+    final template = await SchemaLoader().load();
+    final inspection = await repository.createInspection(template);
+
+    await repository.updateInspectionStatus(
+      inspection.id,
+      InspectionStatus.inProgress,
+    );
+    await repository.updateInspectionStatus(
+      inspection.id,
+      InspectionStatus.readyForReview,
+    );
+    await repository.updateInspectionStatus(
+      inspection.id,
+      InspectionStatus.completed,
+    );
+
+    expect(
+      (await repository.getInspection(inspection.id))!.status,
+      InspectionStatus.completed,
+    );
+    expect(
+      () => repository.updateInspectionStatus(
+        inspection.id,
+        InspectionStatus.inProgress,
+      ),
+      throwsStateError,
     );
   });
 }

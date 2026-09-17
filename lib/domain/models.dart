@@ -1,5 +1,31 @@
 typedef JsonMap = Map<String, dynamic>;
 
+enum InspectionStatus {
+  draft('draft', 'Draft'),
+  inProgress('in_progress', 'In Progress'),
+  readyForReview('ready_for_review', 'Ready for Review'),
+  completed('completed', 'Completed');
+
+  const InspectionStatus(this.databaseValue, this.label);
+
+  final String databaseValue;
+  final String label;
+
+  factory InspectionStatus.fromDatabase(String value) {
+    for (final status in values) {
+      if (status.databaseValue == value) return status;
+    }
+    throw FormatException('Unknown inspection status: $value');
+  }
+
+  InspectionStatus? get next => switch (this) {
+    InspectionStatus.draft => InspectionStatus.inProgress,
+    InspectionStatus.inProgress => InspectionStatus.readyForReview,
+    InspectionStatus.readyForReview => InspectionStatus.completed,
+    InspectionStatus.completed => null,
+  };
+}
+
 DateTime _dateTime(Object? value) => DateTime.parse(value! as String);
 
 Map<String, String> _stringMap(Object? value) =>
@@ -290,15 +316,21 @@ class PhotoAttachment {
   final DateTime capturedAt;
   final JsonMap metadata;
 
-  PhotoAttachment copyWith({int? orderIndex}) => PhotoAttachment(
+  PhotoAttachment copyWith({
+    int? orderIndex,
+    String? originalPath,
+    String? reportPath,
+    DateTime? capturedAt,
+    JsonMap? metadata,
+  }) => PhotoAttachment(
     id: id,
     inspectionId: inspectionId,
     itemId: itemId,
     orderIndex: orderIndex ?? this.orderIndex,
-    originalPath: originalPath,
-    reportPath: reportPath,
-    capturedAt: capturedAt,
-    metadata: metadata,
+    originalPath: originalPath ?? this.originalPath,
+    reportPath: reportPath ?? this.reportPath,
+    capturedAt: capturedAt ?? this.capturedAt,
+    metadata: metadata ?? this.metadata,
   );
 
   JsonMap toJson() => {
@@ -375,7 +407,7 @@ class Inspection {
     id: json['id'] as String,
     templateVersion: json['templateVersion'] as String,
     siteFields: _stringMap(json['siteFields']),
-    status: json['status'] as String,
+    status: InspectionStatus.fromDatabase(json['status'] as String),
     createdAt: _dateTime(json['createdAt']),
     updatedAt: _dateTime(json['updatedAt']),
     responses: (json['responses'] as List<dynamic>? ?? const [])
@@ -383,13 +415,15 @@ class Inspection {
         .toList(growable: false),
   );
 
-  static const draftStatus = 'draft';
-  static const completedStatus = 'completed';
+  static const draftStatus = InspectionStatus.draft;
+  static const inProgressStatus = InspectionStatus.inProgress;
+  static const readyForReviewStatus = InspectionStatus.readyForReview;
+  static const completedStatus = InspectionStatus.completed;
 
   final String id;
   final String templateVersion;
   final Map<String, String> siteFields;
-  final String status;
+  final InspectionStatus status;
   final DateTime createdAt;
   final DateTime updatedAt;
   final List<InspectionItemResponse> responses;
@@ -403,7 +437,7 @@ class Inspection {
 
   Inspection copyWith({
     Map<String, String>? siteFields,
-    String? status,
+    InspectionStatus? status,
     DateTime? updatedAt,
     List<InspectionItemResponse>? responses,
   }) => Inspection(
@@ -420,7 +454,7 @@ class Inspection {
     'id': id,
     'templateVersion': templateVersion,
     'siteFields': siteFields,
-    'status': status,
+    'status': status.databaseValue,
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
     'responses': responses.map((response) => response.toJson()).toList(),
