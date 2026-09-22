@@ -1,0 +1,66 @@
+name: iOS unsigned IPA build
+
+# Builds an unsigned iOS IPA on a GitHub-hosted macOS runner.
+# Unsigned on purpose: signing happens locally with a free Apple ID
+# (AltServer-Linux) so no paid Apple Developer account is needed.
+# Private-repo macOS runs bill ~10x minutes against the free-plan
+# quota, so this workflow is manual-trigger only.
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_name:
+        description: "Artifact label (e.g. v1.0.0-ios1)"
+        required: false
+        default: "ios-unsigned"
+
+jobs:
+  build-ipa:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+
+      - name: Install Flutter 3.47.4
+        run: |
+          git clone --depth 1 -b 3.47.4 https://github.com/flutter/flutter.git "$HOME/flutter"
+          echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
+          flutter --version
+          flutter config --no-analytics
+
+      - name: Pub get + analyze + tests
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+
+      - name: Build unsigned iOS app (no codesign)
+        run: |
+          flutter build ios --release --no-codesign
+          ls -la build/ios/iphoneos/
+
+      - name: Package unsigned .ipa
+        run: |
+          cd build/ios/iphoneos
+          rm -rf Payload
+          mkdir Payload
+          cp -R Runner.app Payload/
+          zip -qry9 "$GITHUB_WORKSPACE/dist_ios/TowerInspection-unsigned.ipa" Payload
+          cd "$GITHUB_WORKSPACE"
+          unzip -l dist_ios/TowerInspection-unsigned.ipa | head -8
+          du -h dist_ios/TowerInspection-unsigned.ipa
+        env:
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TowerInspection-${{ inputs.build_name }}
+          path: dist_ios/TowerInspection-unsigned.ipa
+          retention-days: 7

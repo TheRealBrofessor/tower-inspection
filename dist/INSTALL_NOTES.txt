@@ -1,0 +1,3 @@
+Tower Inspection Field App v1.0.0 — Android release build (60 MB, signed).
+
+INSTALL: copy to your phone, tap it in the Files app, allow "Install unknown apps" when prompted, then open. No account, no setup, works fully offline.
