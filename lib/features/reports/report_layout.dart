@@ -113,6 +113,8 @@ class ReportLayout {
   final ReportContractorSpec contractor;
   final List<ReportItemSpec> items;
   final List<ReportPage> pages;
+
+  Iterable<ReportPage> get bodyPages => pages.where((page) => !page.isCover);
 }
 
 ReportLayout buildReportLayout(
@@ -156,7 +158,9 @@ class ReportPage {
     this.item,
     this.photoBlock,
     this.showItemHeader = false,
-  });
+  }) : assert(kind != ReportPageKind.cover || item == null),
+       assert(kind != ReportPageKind.item || item != null),
+       assert(photoBlock == null || kind == ReportPageKind.item);
 
   final ReportPageKind kind;
   final ReportItemSpec? item;
@@ -164,6 +168,10 @@ class ReportPage {
   final bool showItemHeader;
 
   bool get isCover => kind == ReportPageKind.cover;
+  bool get hasPhotoBlock => photoBlock != null;
+  String? get photoBlockHeader => photoBlock?.label;
+  List<PhotoSlotSpec> get photoSlots =>
+      photoBlock?.slots ?? const <PhotoSlotSpec>[];
 }
 
 class ReportHeaderSpec {

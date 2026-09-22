@@ -7,7 +7,9 @@ import 'package:pdf/widgets.dart' as pw;
 import 'report_layout.dart';
 
 class PdfComposer {
-  static const double _photoSize = 3.33 * PdfPageFormat.inch;
+  // Three rows plus their block header must fit between the repeating page
+  // header and footer so the complete block can remain inseparable.
+  static const double _photoSize = 2.8 * PdfPageFormat.inch;
 
   Future<Uint8List> compose(ReportLayout layout) async {
     final images = await _loadImages(layout);
@@ -167,28 +169,14 @@ class PdfComposer {
     Map<String, pw.MemoryImage> images,
   ) {
     final widgets = <pw.Widget>[];
-    for (final item in layout.items) {
-      widgets.add(
-        pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-          children: [
-            if (item.showSectionHeader) ...[
-              pw.Text(
-                _safeText(item.sectionTitle),
-                style: const pw.TextStyle(
-                  fontSize: 13,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-              pw.SizedBox(height: 4),
-            ],
-            _borderedText(item.fullLabel, bold: true),
-            _statusRow(item.status),
-          ],
-        ),
-      );
+    for (final page in layout.bodyPages) {
+      final item = page.item!;
+      if (page.showItemHeader) {
+        widgets.add(_itemHeader(item));
+      }
 
-      if (item.photoBlocks.isEmpty) {
+      final photoBlock = page.photoBlock;
+      if (photoBlock == null) {
         final observation = item.observation;
         if (observation != null) {
           widgets
@@ -198,23 +186,50 @@ class PdfComposer {
         continue;
       }
 
-      for (final block in item.photoBlocks) {
-        widgets.add(_photoBlockHeader(block, item.observation));
-        for (var slotIndex = 0; slotIndex < block.slots.length; slotIndex++) {
-          final showComments = block.blockNumber == 1 && slotIndex == 0;
-          widgets.add(
-            _photoRow(
-              block.slots[slotIndex],
-              images,
-              showComments ? item.observation : null,
-            ),
-          );
-        }
+      widgets.add(_photoBlock(photoBlock, item.observation, images));
+      if (photoBlock.blockNumber == item.photoBlocks.length) {
+        widgets.add(pw.SizedBox(height: 12));
       }
-      widgets.add(pw.SizedBox(height: 12));
     }
     return widgets;
   }
+
+  pw.Widget _itemHeader(ReportItemSpec item) => pw.Column(
+    crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+    children: [
+      if (item.showSectionHeader) ...[
+        pw.Text(
+          _safeText(item.sectionTitle),
+          style: const pw.TextStyle(
+            fontSize: 13,
+            fontWeight: pw.FontWeight.bold,
+          ),
+        ),
+        pw.SizedBox(height: 4),
+      ],
+      _borderedText(item.fullLabel, bold: true),
+      _statusRow(item.status),
+    ],
+  );
+
+  pw.Widget _photoBlock(
+    PhotoBlockSpec block,
+    ObservationBlockSpec? observation,
+    Map<String, pw.MemoryImage> images,
+  ) => pw.Inseparable(
+    child: pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+      children: [
+        _photoBlockHeader(block, observation),
+        for (var slotIndex = 0; slotIndex < block.slots.length; slotIndex++)
+          _photoRow(
+            block.slots[slotIndex],
+            images,
+            block.blockNumber == 1 && slotIndex == 0 ? observation : null,
+          ),
+      ],
+    ),
+  );
 
   pw.Widget _borderedText(String value, {bool bold = false}) => pw.Container(
     width: double.infinity,

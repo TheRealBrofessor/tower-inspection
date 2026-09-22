@@ -19,7 +19,7 @@ Future<void> main(List<String> args) async {
   final decoded = jsonDecode(schemaSource) as Map<String, dynamic>;
   final template = InspectionTemplate.fromJson(decoded);
 
-  final inspectionId = 'sample-fidelity-001';
+  const inspectionId = 'sample-fidelity-001';
   final photoDir = Directory('build/fidelity_photos');
   if (photoDir.existsSync()) photoDir.deleteSync(recursive: true);
   photoDir.createSync(recursive: true);
@@ -101,5 +101,5 @@ Future<void> main(List<String> args) async {
   File(outPath)
     ..createSync(recursive: true)
     ..writeAsBytesSync(bytes);
-  print('WROTE $outPath bytes=${bytes.length}');
+  stdout.writeln('WROTE $outPath bytes=${bytes.length}');
 }
