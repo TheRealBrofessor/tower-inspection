@@ -1,0 +1,7 @@
+# Copy this file to android/key.properties and replace every placeholder.
+# android/key.properties is ignored by git. Never commit real values.
+
+storeFile=app/your-release-key.jks
+storePassword=REPLACE_WITH_SECRET
+keyAlias=REPLACE_WITH_ALIAS
+keyPassword=REPLACE_WITH_SECRET
