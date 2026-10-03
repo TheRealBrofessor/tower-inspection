@@ -1,42 +1,86 @@
 # Android — Build & Install
 
-## Quick install (today)
-An installable release APK is built and committed to `dist/`:
+## Quick install
 
-```
-dist/TowerInspection-v1.0.0.apk   (~60 MB, signed, release)
-```
+A previously built release APK exists under `dist/`. Treat it as a development artifact until release signing is rotated and the public-release audit is complete.
 
-**Install on your phone:**
-1. Copy the APK to the phone (USB, Google Drive, email to yourself, etc.)
-2. On the phone, tap the APK in Files → allow "Install unknown apps" for that one app when prompted
-3. Open the app. Grant Camera permission when first tapping a photo slot.
-
-The app is fully offline — no account, no network, nothing to configure.
+For development/device testing, prefer building from current source rather than redistributing an older APK.
 
 ## Rebuild from source
+
+Set your local Flutter/Android/Java environment as appropriate for your machine, then run:
+
 ```bash
-export PATH=/home/professor/flutter/flutter/bin:$PATH
-export ANDROID_HOME=/home/professor/android-sdk
-export JAVA_HOME=/home/professor/jdk/jdk-21.0.12.1+1
-
-flutter build apk --release        # → build/app/outputs/flutter-apk/app-release.apk
+flutter pub get
+flutter build apk --debug
 ```
-Debug build: `flutter build apk --debug`
 
-## Signing
-- Keystore: `android/app/tower-inspection-release.jks` (generated locally 2026-09-16)
-- Alias `tower-inspection`, store/key password `towerinspection2026`
-- Signing config lives in `android/app/build.gradle.kts`
-- **Back up the keystore.** Losing it means a different signature = no updates over the installed app (would require uninstall/reinstall). For Google Play later, generate a fresh keystore and use Play App Signing.
-- The password is in the gradle file for now — fine for private use; move it to an untracked `key.properties` before any public distribution.
+For a signed release build, configure release signing first.
 
-## Verified
-- `apksigner verify` passes (release cert CN=Tower Inspection, OU=Field Ops, O=Elite Tower LLC)
-- Release APK 60.4 MB vs debug 160.7 MB
+## Release signing
 
-## Run on a device from the build machine
+Real signing keys and passwords must stay outside git.
+
+1. Generate a new release key for the public/distribution build. Do not reuse the key whose password appeared in earlier repository history.
+2. Copy the safe template:
+
+   ```bash
+   cp android/key.properties.example android/key.properties
+   ```
+
+3. Put the real values only in `android/key.properties`.
+4. Store the keystore at the path referenced by `storeFile` (for example, `android/app/your-release-key.jks`).
+5. Build:
+
+   ```bash
+   flutter build apk --release
+   ```
+
+`android/key.properties`, `*.jks`, and `*.keystore` are ignored by git.
+
+Example structure (placeholders only):
+
+```properties
+storeFile=app/your-release-key.jks
+storePassword=REPLACE_WITH_SECRET
+keyAlias=REPLACE_WITH_ALIAS
+keyPassword=REPLACE_WITH_SECRET
+```
+
+The signing configuration in `android/app/build.gradle.kts` loads these values only when `android/key.properties` exists. Without that file, the repository contains no release credentials.
+
+### Important history note
+
+An earlier private-repository commit contained a signing password in source/documentation. Removing it from the current branch does not erase it from git history. Before this repository is made public:
+
+- rotate the signing key;
+- verify no keystore was ever tracked;
+- scan all git history for signing material and other secrets;
+- rewrite/sanitize history if needed.
+
+Do not publish the repository until that audit is complete.
+
+## Verify a release
+
+After producing a signed build, verify the APK with Android build tools, for example:
+
 ```bash
-flutter devices          # phone via USB with USB debugging on
-flutter run --release   # install + launch + logs
+apksigner verify --verbose build/app/outputs/flutter-apk/app-release.apk
 ```
+
+Do not put keystore passwords, private key material, or unnecessary certificate identity details in public documentation.
+
+## Run on a device
+
+```bash
+flutter devices
+flutter run
+```
+
+For release-mode device testing after signing is configured:
+
+```bash
+flutter run --release
+```
+
+The application is designed to operate offline; test camera permissions, local persistence, report generation, and native sharing on actual target devices before distribution.
