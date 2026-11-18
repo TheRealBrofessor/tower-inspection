@@ -45,6 +45,10 @@ jobs:
       - name: Build unsigned iOS app (no codesign)
         run: |
           export PATH="$HOME/flutter/bin:$PATH"
+          flutter precache --ios
+          cd ios
+          pod install
+          cd ..
           flutter build ios --release --no-codesign
           ls -la build/ios/iphoneos/
 
