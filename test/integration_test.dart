@@ -117,4 +117,43 @@ void main() {
       await temporaryDirectory.delete(recursive: true);
     }
   });
+
+  test('deleting an inspection removes its photos and item responses', () async {
+    final temporaryDirectory = await Directory.systemTemp.createTemp(
+      'tower-inspection-delete-',
+    );
+    final database = AppDatabase(
+      factory: databaseFactoryFfi,
+      databasePath: path.join(temporaryDirectory.path, 'inspection.db'),
+    );
+
+    try {
+      final template = await SchemaLoader().load();
+      final repository = InspectionRepository(database);
+      final inspection = await repository.createInspection(template);
+      await repository.addPhoto(
+        inspectionId: inspection.id,
+        itemId: 'A.1',
+        originalPath: '/temporary/original.jpg',
+        reportPath: '/temporary/report.jpg',
+      );
+
+      final photos = await repository.deleteInspection(inspection.id);
+
+      expect(photos, hasLength(1));
+      expect(await repository.getInspection(inspection.id), isNull);
+      final db = await database.database;
+      expect(
+        await db.query(
+          'item_responses',
+          where: 'inspection_id = ?',
+          whereArgs: [inspection.id],
+        ),
+        isEmpty,
+      );
+    } finally {
+      await database.close();
+      await temporaryDirectory.delete(recursive: true);
+    }
+  });
 }

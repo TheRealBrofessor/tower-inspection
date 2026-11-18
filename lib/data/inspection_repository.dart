@@ -19,6 +19,24 @@ class InspectionRepository {
   final Uuid _uuid;
   final DateTime Function() _now;
 
+  Future<List<PhotoAttachment>> deleteInspection(String inspectionId) async {
+    final database = await _appDatabase.database;
+    return database.transaction((transaction) async {
+      final rows = await transaction.query(
+        'photo_attachments',
+        where: 'inspection_id = ?',
+        whereArgs: [inspectionId],
+      );
+      final photos = rows.map(_photoFromRow).toList(growable: false);
+      await transaction.delete(
+        'inspections',
+        where: 'id = ?',
+        whereArgs: [inspectionId],
+      );
+      return photos;
+    });
+  }
+
   Future<Inspection> createInspection(InspectionTemplate template) async {
     final database = await _appDatabase.database;
     final id = _uuid.v4();

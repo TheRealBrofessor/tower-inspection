@@ -41,8 +41,8 @@ dart run tool/fidelity_sample.dart out.pdf  # sample report
 ```
 
 ## Docs
-`docs/architecture.md` · `report-engine.md` · `form-schema.md` · `android.md` · `ios.md` ·
-`decisions.md` · `known-limitations.md` · `testing.md` — and `PROJECT_STATE.md` for status.
+`docs/architecture.md` · `docs/report-engine.md` · `docs/android.md` · `docs/ios.md` ·
+`docs/FIELD_EVALUATION.md` — and `PROJECT_STATE.md` for status.
 
 ## Status (2026-09-16)
 Milestones 0–8 complete: schema extraction (independently audited), app, camera, offline

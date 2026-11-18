@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../data/photo_storage.dart';
 import '../../data/inspection_repository.dart';
 import '../../domain/models.dart';
 
@@ -153,6 +154,34 @@ class InspectionBloc extends ChangeNotifier {
           ],
         ),
       );
+      return true;
+    } catch (error) {
+      _recordError(error);
+      return false;
+    }
+  }
+
+  Future<bool> deleteInspection(String inspectionId) async {
+    try {
+      final photos = await repository.deleteInspection(inspectionId);
+      final storage = PhotoStorage();
+      for (final photo in photos) {
+        await storage.delete(
+          StoredPhotoPaths(
+            originalPath: photo.originalPath,
+            reportPath: photo.reportPath,
+          ),
+        );
+      }
+      if (activeInspection?.id == inspectionId) activeInspection = null;
+      drafts = drafts.where((item) => item.id != inspectionId).toList();
+      inProgress =
+          inProgress.where((item) => item.id != inspectionId).toList();
+      readyForReview =
+          readyForReview.where((item) => item.id != inspectionId).toList();
+      completed =
+          completed.where((item) => item.id != inspectionId).toList();
+      notifyListeners();
       return true;
     } catch (error) {
       _recordError(error);

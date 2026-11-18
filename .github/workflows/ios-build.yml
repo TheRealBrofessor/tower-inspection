@@ -31,22 +31,25 @@ jobs:
         run: |
           git clone --depth 1 -b 3.47.4 https://github.com/flutter/flutter.git "$HOME/flutter"
           echo "$HOME/flutter/bin" >> "$GITHUB_PATH"
-          flutter --version
-          flutter config --no-analytics
+          "$HOME/flutter/bin/flutter" --version
+          "$HOME/flutter/bin/flutter" config --no-analytics
 
       - name: Pub get + analyze + tests
         run: |
+          export PATH="$HOME/flutter/bin:$PATH"
           flutter pub get
           flutter analyze
           flutter test
 
       - name: Build unsigned iOS app (no codesign)
         run: |
+          export PATH="$HOME/flutter/bin:$PATH"
           flutter build ios --release --no-codesign
           ls -la build/ios/iphoneos/
 
       - name: Package unsigned .ipa
         run: |
+          export PATH="$HOME/flutter/bin:$PATH"
           cd build/ios/iphoneos
           rm -rf Payload
           mkdir Payload

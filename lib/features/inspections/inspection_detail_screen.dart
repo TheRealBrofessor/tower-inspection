@@ -131,6 +131,12 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
                   onPressed: () => _openReview(inspection),
                   icon: const Icon(Icons.fact_check_outlined),
                 ),
+                IconButton(
+                  key: const Key('delete-inspection-button'),
+                  tooltip: 'Delete inspection',
+                  onPressed: () => _confirmDelete(inspection),
+                  icon: const Icon(Icons.delete_outline),
+                ),
               ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(3),
@@ -317,6 +323,41 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
         builder: (_) => ReportPreviewScreen(inspectionId: inspection.id),
       ),
     );
+  }
+
+  Future<void> _confirmDelete(Inspection inspection) async {
+    await _flushComments();
+    if (!mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete inspection?'),
+        content: const Text(
+          'This permanently deletes the inspection, all of its photos, and generated reports.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('CANCEL'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('DELETE'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final deleted =
+        await _bloc?.deleteInspection(inspection.id) ?? false;
+    if (!deleted) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Inspection could not be deleted.')),
+      );
+      return;
+    }
+    Navigator.of(context).pop();
   }
 }
 
