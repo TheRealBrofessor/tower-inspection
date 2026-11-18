@@ -12,32 +12,32 @@ void main() {
 
   test('serializes comment saves in call order', () async {
     final repository = _RecordingRepository();
-    final template = const InspectionTemplate(
+    const template = InspectionTemplate(
       templateVersion: '1.0.0',
       reportTitle: 'Test',
-      contractor: const ContractorDetails(
+      contractor: ContractorDetails(
         name: '',
         address: '',
         cityStateZip: '',
       ),
-      headerConvention: const HeaderConvention(
+      headerConvention: HeaderConvention(
         left: '',
         asrLabel: '',
         pageLabel: '',
       ),
-      siteInfoFields: const [],
-      defaultStatuses: const [],
-      sections: const [],
+      siteInfoFields: [],
+      defaultStatuses: [],
+      sections: [],
     );
     final bloc = InspectionBloc(template: template, repository: repository)
       ..activeInspection = Inspection(
         id: 'inspection-1',
         templateVersion: '1.0.0',
-        siteFields: const {},
+        siteFields: {},
         status: InspectionStatus.inProgress,
         createdAt: DateTime.utc(2026),
         updatedAt: DateTime.utc(2026),
-        responses: const [
+        responses: [
           InspectionItemResponse(
             inspectionId: 'inspection-1',
             itemId: 'A.1',
