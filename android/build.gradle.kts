@@ -17,6 +17,14 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+    project.afterEvaluate {
+        project.extensions.findByName("dependencies")?.let {
+            project.dependencies.add(
+                "implementation",
+                "androidx.concurrent:concurrent-futures:1.2.0",
+            )
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {
