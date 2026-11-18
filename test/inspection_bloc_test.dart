@@ -38,7 +38,7 @@ void main() {
         createdAt: DateTime.utc(2026),
         updatedAt: DateTime.utc(2026),
         responses: [
-          InspectionItemResponse(
+          const InspectionItemResponse(
             inspectionId: 'inspection-1',
             itemId: 'A.1',
           ),
