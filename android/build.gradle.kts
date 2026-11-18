@@ -17,13 +17,10 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
-    project.afterEvaluate {
-        project.extensions.findByName("dependencies")?.let {
-            project.dependencies.add(
-                "implementation",
-                "androidx.concurrent:concurrent-futures:1.2.0",
-            )
-        }
+    configurations.configureEach {
+        resolutionStrategy.force(
+            "androidx.concurrent:concurrent-futures:1.2.0",
+        )
     }
 }
 
