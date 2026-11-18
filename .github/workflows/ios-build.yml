@@ -36,6 +36,7 @@ jobs:
 
       - name: Pub get + analyze + tests
         run: |
+          brew install poppler
           export PATH="$HOME/flutter/bin:$PATH"
           flutter pub get
           flutter analyze
