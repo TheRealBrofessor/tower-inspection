@@ -357,6 +357,7 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
       );
       return;
     }
+    if (!mounted) return;
     Navigator.of(context).pop();
   }
 }
