@@ -12,7 +12,7 @@ void main() {
 
   test('serializes comment saves in call order', () async {
     final repository = _RecordingRepository();
-    final template = InspectionTemplate(
+    final template = const InspectionTemplate(
       templateVersion: '1.0.0',
       reportTitle: 'Test',
       contractor: const ContractorDetails(
