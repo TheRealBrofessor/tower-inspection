@@ -55,6 +55,7 @@ jobs:
       - name: Package unsigned .ipa
         run: |
           export PATH="$HOME/flutter/bin:$PATH"
+          mkdir -p "$GITHUB_WORKSPACE/dist_ios"
           cd build/ios/iphoneos
           rm -rf Payload
           mkdir Payload
