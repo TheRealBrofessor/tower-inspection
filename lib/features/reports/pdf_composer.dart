@@ -245,7 +245,7 @@ class PdfComposer {
     if (!moveObservationAbovePhotos) return photoContent;
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-      children: [_observationFlow(observation!), photoContent],
+      children: [_observationFlow(observation), photoContent],
     );
   }
 
