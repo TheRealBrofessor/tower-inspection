@@ -17,11 +17,6 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
-    configurations.configureEach {
-        resolutionStrategy.force(
-            "androidx.concurrent:concurrent-futures:1.2.0",
-        )
-    }
 }
 
 tasks.register<Delete>("clean") {
