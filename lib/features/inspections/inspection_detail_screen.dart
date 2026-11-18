@@ -61,7 +61,7 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
     if (_commentsController.text != _lastPersistedComments) {
       final item = _currentItem;
       if (item != null) {
-        unawaited(_bloc?.setComments(item.id, _commentsController.text));
+        unawaited(_persistComments(item));
       }
     }
     _commentsController.dispose();
@@ -274,8 +274,13 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
   ) {
     _commentsTimer?.cancel();
     _commentsTimer = Timer(const Duration(milliseconds: 300), () {
-      _lastPersistedComments = value;
-      unawaited(bloc.setComments(item.id, value));
+      unawaited(
+        bloc.setComments(item.id, value).then((saved) {
+          if (saved && mounted && _currentItem?.id == item.id) {
+            _lastPersistedComments = value;
+          }
+        }),
+      );
     });
   }
 
@@ -283,8 +288,15 @@ class _InspectionDetailScreenState extends State<InspectionDetailScreen> {
     _commentsTimer?.cancel();
     final item = _currentItem;
     if (item != null && _commentsController.text != _lastPersistedComments) {
-      _lastPersistedComments = _commentsController.text;
-      await _bloc?.setComments(item.id, _commentsController.text);
+      await _persistComments(item);
+    }
+  }
+
+  Future<void> _persistComments(InspectionItem item) async {
+    final value = _commentsController.text;
+    final saved = await _bloc?.setComments(item.id, value) ?? false;
+    if (saved && mounted && _currentItem?.id == item.id) {
+      _lastPersistedComments = value;
     }
   }
 

@@ -24,7 +24,10 @@ lib/main.dart                       ← providers + MaterialApp + theme
 ```
 
 ## Key flows
-- **Autosave:** every status tap, site-field edit, photo op persists immediately (fire-and-forget); comments debounce 300ms + flush on dispose
+- **Autosave:** every status tap, site-field edit, and comment save is serialized
+  through the inspection bloc; comments debounce 300ms and flush on navigation
+  or dispose. The UI exposes an active save state and records failures instead
+  of treating fire-and-forget writes as successful.
 - **Offline-first:** zero network code in the app; DB + photos live in app documents dir
 - **Crash recovery:** repository reloads full state from SQLite on open; nothing critical is memory-only
 
@@ -43,3 +46,19 @@ The layout model is pure Dart → unit-testable without widgets.
 
 ## Platform isolation
 - Platform-specific code confined to: permission prompts, camera plugin, share sheet, file paths — all behind repository/service interfaces. Android manifest + iOS Info.plist carry only camera/storage permission strings.
+
+## Commercial expansion boundary
+
+The current app remains a single-template, offline field workflow. Future
+capabilities should be added behind these boundaries without changing the
+existing SQLite inspection contract:
+
+- versioned inspection templates and organization-scoped branding;
+- explicit export/backup packages with schema and media manifests;
+- supervisor review and approval records separate from field responses;
+- an optional synchronization adapter above the repository, never inside the
+  offline write path;
+- separate ingestion adapters for drone imagery and future assisted findings.
+
+Cloud synchronization, drone auditing, AI findings, and automated audit
+workflows are not implemented.

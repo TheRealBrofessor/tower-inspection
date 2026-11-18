@@ -362,12 +362,12 @@ class PdfComposer {
   ) {
     final image = slot.reportPath == null ? null : images[slot.reportPath];
     return pw.Container(
-      height: _photoSize,
       child: pw.Row(
         crossAxisAlignment: pw.CrossAxisAlignment.stretch,
         children: [
           pw.Expanded(
             child: pw.Container(
+              constraints: const pw.BoxConstraints(minHeight: _photoSize),
               alignment: pw.Alignment.center,
               decoration: pw.BoxDecoration(border: pw.Border.all(width: 0.8)),
               child: pw.Container(
@@ -382,6 +382,7 @@ class PdfComposer {
           ),
           pw.Expanded(
             child: pw.Container(
+              constraints: const pw.BoxConstraints(minHeight: _photoSize),
               padding: const pw.EdgeInsets.all(7),
               decoration: pw.BoxDecoration(border: pw.Border.all(width: 0.8)),
               child: observation == null || observation.comments.isEmpty
@@ -389,8 +390,6 @@ class PdfComposer {
                   : pw.Text(
                       _safeText(observation.comments),
                       softWrap: true,
-                      maxLines: observation.maxLines,
-                      overflow: pw.TextOverflow.clip,
                       style: const pw.TextStyle(fontSize: 9, lineSpacing: 2),
                     ),
             ),
@@ -405,7 +404,7 @@ class PdfComposer {
     children: [
       _borderedText(observation.title, bold: true),
       pw.Container(
-        height: 2 * PdfPageFormat.inch,
+        constraints: const pw.BoxConstraints(minHeight: 2 * PdfPageFormat.inch),
         padding: const pw.EdgeInsets.all(7),
         decoration: pw.BoxDecoration(border: pw.Border.all(width: 0.8)),
         child: observation.comments.isEmpty
@@ -413,8 +412,6 @@ class PdfComposer {
             : pw.Text(
                 _safeText(observation.comments),
                 softWrap: true,
-                maxLines: observation.maxLines,
-                overflow: pw.TextOverflow.clip,
                 style: const pw.TextStyle(fontSize: 9, lineSpacing: 2),
               ),
       ),

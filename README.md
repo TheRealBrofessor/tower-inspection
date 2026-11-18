@@ -5,9 +5,10 @@ Replaces the paper/Word workflow: take photos in-app against each inspection ite
 tap statuses, dictate/type observations, then generate a **source-faithful PDF report**
 matching the existing "Tower Site Inspection Report" Word form — all offline.
 
-## Install (Android, today)
-`dist/TowerInspection-v1.0.0.apk` — signed release build. Copy to phone → open → allow install.
-See `docs/android.md`.
+## Install for evaluation
+
+Build a current debug APK from source with `flutter build apk --debug`; do not
+redistribute historical artifacts from `dist/`. See `docs/android.md`.
 
 ## What it does
 - **New Inspection** → fill Site Name / ASR / Prepared for / Address / Date
@@ -16,7 +17,8 @@ See `docs/android.md`.
   source form `Blank inspection SS 4-03-26.docx` (kept at `docs/source_inspection_form.docx`)
 - Per item: 4 clickable statuses (Okay / Possible Improvement / Needs Repair / Not Applicable),
   3 default photo slots + unlimited "Add Photo", observations field
-- Everything **autosaves** to local SQLite (WAL, FK-enforced); survives app kill / reboot / power loss
+- Everything **autosaves** to local SQLite (WAL, FK-enforced); verify restart
+  recovery on the target device before field use
 - **Review** screen: errors (missing statuses/site fields) vs warnings (no photos, findings without
   comments); tap a finding to jump to the item
 - **Generate report**: PDF that reproduces the original form structure — cover block, section
@@ -44,7 +46,10 @@ dart run tool/fidelity_sample.dart out.pdf  # sample report
 `docs/architecture.md` · `docs/report-engine.md` · `docs/android.md` · `docs/ios.md` ·
 `docs/FIELD_EVALUATION.md` — and `PROJECT_STATE.md` for status.
 
-## Status (2026-09-16)
-Milestones 0–8 complete: schema extraction (independently audited), app, camera, offline
-recovery, review, PDF engine, share. Android debug+release APKs built and verified signed.
-iOS project complete but needs a Mac/Xcode to compile (see docs/ios.md).
+## Status
+
+The offline inspection workflow, Android debug CI, and unsigned iOS CI are
+implemented. Automated checks cover persistence, photo cleanup, review logic,
+and report pagination. Controlled real-device testing, release-signing
+rotation, proprietary-template rights, and final report-fidelity review remain
+required before any external pilot or production claim.

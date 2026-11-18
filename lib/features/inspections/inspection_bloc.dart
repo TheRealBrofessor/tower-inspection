@@ -16,7 +16,10 @@ class InspectionBloc extends ChangeNotifier {
   List<Inspection> completed = const [];
   Inspection? activeInspection;
   bool isLoading = false;
+  bool isSaving = false;
   Object? lastError;
+  Future<void> _saveQueue = Future<void>.value();
+  int _pendingSaves = 0;
 
   Future<void> initialize() async {
     isLoading = true;
@@ -79,7 +82,9 @@ class InspectionBloc extends ChangeNotifier {
     _replaceInLists(activeInspection!);
     notifyListeners();
     try {
-      await repository.updateSiteField(inspection.id, fieldId, value);
+      await _enqueueSave(
+        () => repository.updateSiteField(inspection.id, fieldId, value),
+      );
     } catch (error) {
       _recordError(error);
     }
@@ -90,23 +95,29 @@ class InspectionBloc extends ChangeNotifier {
     if (inspection == null) return;
     _updateResponse(itemId, (response) => response.copyWith(status: status));
     try {
-      await repository.setStatus(inspection.id, itemId, status);
+      await _enqueueSave(
+        () => repository.setStatus(inspection.id, itemId, status),
+      );
     } catch (error) {
       _recordError(error);
     }
   }
 
-  Future<void> setComments(String itemId, String comments) async {
+  Future<bool> setComments(String itemId, String comments) async {
     final inspection = activeInspection;
-    if (inspection == null) return;
+    if (inspection == null) return false;
     _updateResponse(
       itemId,
       (response) => response.copyWith(comments: comments),
     );
     try {
-      await repository.setComments(inspection.id, itemId, comments);
+      await _enqueueSave(
+        () => repository.setComments(inspection.id, itemId, comments),
+      );
+      return true;
     } catch (error) {
       _recordError(error);
+      return false;
     }
   }
 
@@ -349,5 +360,26 @@ class InspectionBloc extends ChangeNotifier {
   void _recordError(Object error) {
     lastError = error;
     notifyListeners();
+  }
+
+  Future<void> _enqueueSave(Future<void> Function() operation) {
+    _pendingSaves++;
+    if (!isSaving) {
+      isSaving = true;
+      notifyListeners();
+    }
+
+    final save = _saveQueue.then(
+      (_) => operation(),
+      onError: (Object _) => operation(),
+    );
+    _saveQueue = save.whenComplete(() {
+      _pendingSaves--;
+      if (_pendingSaves == 0) {
+        isSaving = false;
+        notifyListeners();
+      }
+    }).catchError((_) {});
+    return save;
   }
 }
