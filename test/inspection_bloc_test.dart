@@ -62,7 +62,7 @@ void main() {
 
   test('inspection deletion succeeds when file cleanup fails', () async {
     final repository = _RecordingRepository();
-    final template = const InspectionTemplate(
+    const template = InspectionTemplate(
       templateVersion: '1.0.0',
       reportTitle: 'Test',
       contractor: ContractorDetails(
@@ -83,7 +83,7 @@ void main() {
       template: template,
       repository: repository,
       photoStorage: _ThrowingPhotoStorage(),
-    )..activeInspection = const Inspection(
+    )..activeInspection = Inspection(
         id: 'inspection-1',
         templateVersion: '1.0.0',
         siteFields: {},
