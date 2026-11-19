@@ -5,10 +5,15 @@ import '../../data/inspection_repository.dart';
 import '../../domain/models.dart';
 
 class InspectionBloc extends ChangeNotifier {
-  InspectionBloc({required this.template, required this.repository});
+  InspectionBloc({
+    required this.template,
+    required this.repository,
+    PhotoStorage? photoStorage,
+  }) : photoStorage = photoStorage ?? PhotoStorage();
 
   final InspectionTemplate template;
   final InspectionRepository repository;
+  final PhotoStorage photoStorage;
 
   List<Inspection> drafts = const [];
   List<Inspection> inProgress = const [];
@@ -175,14 +180,17 @@ class InspectionBloc extends ChangeNotifier {
   Future<bool> deleteInspection(String inspectionId) async {
     try {
       final photos = await repository.deleteInspection(inspectionId);
-      final storage = PhotoStorage();
       for (final photo in photos) {
-        await storage.delete(
-          StoredPhotoPaths(
-            originalPath: photo.originalPath,
-            reportPath: photo.reportPath,
-          ),
-        );
+        try {
+          await photoStorage.delete(
+            StoredPhotoPaths(
+              originalPath: photo.originalPath,
+              reportPath: photo.reportPath,
+            ),
+          );
+        } catch (error) {
+          lastError = error;
+        }
       }
       if (activeInspection?.id == inspectionId) activeInspection = null;
       drafts = drafts.where((item) => item.id != inspectionId).toList();

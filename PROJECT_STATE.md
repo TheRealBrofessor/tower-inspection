@@ -18,7 +18,8 @@ not a production-readiness declaration.
 - Canonical schema: five sections and 18 items, loaded from
   `assets/canonical_form_schema.json`.
 - Persistence: SQLite WAL mode, foreign keys, migrations, inspection/photo
-  deletion cleanup, and close/reopen recovery tests.
+  deletion cleanup, close/reopen recovery tests, and deletion that remains
+  successful even when optional local file cleanup encounters an error.
 - Media: original and report derivatives are tracked separately; replacement
   and deletion remove associated stored files through the photo storage layer.
 - Reports: status rows, cover/site/ASR fields, ordered photo blocks, continued
