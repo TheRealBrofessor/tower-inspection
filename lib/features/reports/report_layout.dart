@@ -4,7 +4,7 @@ const int reportPhotosPerBlock = 3;
 
 enum ReportPageKind { cover, item }
 
-enum ReportTextOverflow { clip }
+enum ReportTextOverflow { preserve }
 
 class ReportLayout {
   const ReportLayout({
@@ -278,7 +278,7 @@ class ObservationBlockSpec {
     this.title = 'Observations and Recommendations',
     required this.comments,
     this.maxLines = 20,
-    this.overflow = ReportTextOverflow.clip,
+    this.overflow = ReportTextOverflow.preserve,
   });
 
   final String title;

@@ -10,15 +10,22 @@ This is a private, controlled evaluation procedure for Tower Inspection. It is n
 - Do not import an employer's inspection form, customer information, site photographs, or other proprietary records into a shareable demo.
 - Use a fictional site name, fictional address, and clearly synthetic ASR identifier.
 
-## Five-minute evaluator path
+## Controlled evaluator path
 
 1. Open the app and create a new inspection with fictional site details.
-2. Open an inspection item in each section. Choose a status and add a short observation.
-3. Add one photo of an ordinary non-sensitive object using the device camera. Confirm that the photo appears on the correct item.
-4. Close the app and reopen it. Verify that the site details, statuses, observations, and photo remain available without network access.
-5. Open Review. Confirm missing required information is reported as an error and missing supporting evidence is identified as a warning where applicable.
-6. Complete the required fields, generate a PDF, and inspect the cover, section headings, item labels, statuses, observations, photo placement, and page breaks.
-7. Open the device share sheet, but share only with an evaluator you have explicitly authorized.
+2. Complete all 18 inspection items across sections A–E, selecting statuses and
+   entering observations where applicable.
+3. Capture and attach photos to multiple items, including a replacement and
+   reorder, using ordinary non-sensitive objects.
+4. Force-close the app, reopen it, and verify site details, all statuses,
+   observations, photo order, and photo replacements.
+5. Open Review. Confirm missing required information is reported as an error
+   and missing supporting evidence is identified as a warning where applicable.
+6. Generate a PDF and verify the cover, ASR, section headings, item labels,
+   every selected status, long observations, photo ordering, continuation
+   blocks, missing-photo boxes, and page breaks.
+7. Open the native share sheet offline, but share only with an evaluator you
+   have explicitly authorized.
 
 ## Record evidence
 
@@ -33,6 +40,10 @@ This is a private, controlled evaluation procedure for Tower Inspection. It is n
 | Native share | Share sheet opens; no unexpected upload | |
 
 Record device model, Android version, app commit, and the exact steps for any failure. Remove test photographs from shared artifacts unless permission to share them is explicit.
+
+Automated CI is not a substitute for this physical-device workflow. Record
+which steps were actually executed; do not infer camera, force-close, sharing,
+or report-fidelity results from a build-only check.
 
 ## Release and pilot blockers
 

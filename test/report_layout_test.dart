@@ -166,8 +166,9 @@ void main() {
     );
   });
 
-  test('long observations retain text and declare bounded clipping', () {
-    final comments = List.filled(101, 'note').join(' ');
+  test('long observations are preserved in rendered PDF text', () async {
+    const marker = 'END-OF-LONG-OBSERVATION';
+    final comments = '${List.filled(101, 'note').join(' ')} $marker';
     expect(comments.length, greaterThanOrEqualTo(500));
     final layout = ReportLayout.build(
       template: template,
@@ -176,8 +177,9 @@ void main() {
     final observation = layout.items.first.observation!;
 
     expect(observation.comments, comments);
-    expect(observation.maxLines, greaterThan(0));
-    expect(observation.overflow, ReportTextOverflow.clip);
+    expect(observation.overflow, ReportTextOverflow.preserve);
+    final pages = await _renderedTextPages(layout);
+    expect(pages.any((page) => page.contains(marker)), isTrue);
   });
 }
 

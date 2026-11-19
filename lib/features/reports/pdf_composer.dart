@@ -216,20 +216,38 @@ class PdfComposer {
     PhotoBlockSpec block,
     ObservationBlockSpec? observation,
     Map<String, pw.MemoryImage> images,
-  ) => pw.Inseparable(
-    child: pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-      children: [
-        _photoBlockHeader(block, observation),
-        for (var slotIndex = 0; slotIndex < block.slots.length; slotIndex++)
-          _photoRow(
-            block.slots[slotIndex],
-            images,
-            block.blockNumber == 1 && slotIndex == 0 ? observation : null,
+  ) {
+    final moveObservationAbovePhotos =
+        block.blockNumber == 1 &&
+        observation != null &&
+        observation.comments.length > 300;
+    final photoContent = pw.Inseparable(
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+        children: [
+          _photoBlockHeader(
+            block,
+            moveObservationAbovePhotos ? null : observation,
           ),
-      ],
-    ),
-  );
+          for (var slotIndex = 0; slotIndex < block.slots.length; slotIndex++)
+            _photoRow(
+              block.slots[slotIndex],
+              images,
+              moveObservationAbovePhotos && slotIndex == 0
+                  ? null
+                  : block.blockNumber == 1 && slotIndex == 0
+                  ? observation
+                  : null,
+            ),
+        ],
+      ),
+    );
+    if (!moveObservationAbovePhotos) return photoContent;
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+      children: [_observationFlow(observation), photoContent],
+    );
+  }
 
   pw.Widget _borderedText(String value, {bool bold = false}) => pw.Container(
     width: double.infinity,
@@ -361,42 +379,38 @@ class PdfComposer {
     ObservationBlockSpec? observation,
   ) {
     final image = slot.reportPath == null ? null : images[slot.reportPath];
-    return pw.Container(
-      height: _photoSize,
-      child: pw.Row(
-        crossAxisAlignment: pw.CrossAxisAlignment.stretch,
-        children: [
-          pw.Expanded(
+    return pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Expanded(
+          child: pw.Container(
+            height: _photoSize,
+            alignment: pw.Alignment.center,
+            decoration: pw.BoxDecoration(border: pw.Border.all(width: 0.8)),
             child: pw.Container(
-              alignment: pw.Alignment.center,
-              decoration: pw.BoxDecoration(border: pw.Border.all(width: 0.8)),
-              child: pw.Container(
-                width: _photoSize,
-                height: _photoSize,
-                decoration: pw.BoxDecoration(border: pw.Border.all(width: 0.4)),
-                child: image == null
-                    ? pw.SizedBox()
-                    : pw.Image(image, fit: pw.BoxFit.contain),
-              ),
-            ),
-          ),
-          pw.Expanded(
-            child: pw.Container(
-              padding: const pw.EdgeInsets.all(7),
-              decoration: pw.BoxDecoration(border: pw.Border.all(width: 0.8)),
-              child: observation == null || observation.comments.isEmpty
+              width: _photoSize,
+              height: _photoSize,
+              decoration: pw.BoxDecoration(border: pw.Border.all(width: 0.4)),
+              child: image == null
                   ? pw.SizedBox()
-                  : pw.Text(
-                      _safeText(observation.comments),
-                      softWrap: true,
-                      maxLines: observation.maxLines,
-                      overflow: pw.TextOverflow.clip,
-                      style: const pw.TextStyle(fontSize: 9, lineSpacing: 2),
-                    ),
+                  : pw.Image(image, fit: pw.BoxFit.contain),
             ),
           ),
-        ],
-      ),
+        ),
+        pw.Expanded(
+          child: pw.Container(
+            padding: const pw.EdgeInsets.all(7),
+            decoration: pw.BoxDecoration(border: pw.Border.all(width: 0.8)),
+            child: observation == null || observation.comments.isEmpty
+                ? pw.SizedBox(height: _photoSize - 14)
+                : pw.Text(
+                    _safeText(observation.comments),
+                    softWrap: true,
+                    style: const pw.TextStyle(fontSize: 9, lineSpacing: 2),
+                  ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -405,18 +419,30 @@ class PdfComposer {
     children: [
       _borderedText(observation.title, bold: true),
       pw.Container(
-        height: 2 * PdfPageFormat.inch,
         padding: const pw.EdgeInsets.all(7),
         decoration: pw.BoxDecoration(border: pw.Border.all(width: 0.8)),
         child: observation.comments.isEmpty
-            ? pw.SizedBox()
+            ? pw.SizedBox(height: 2 * PdfPageFormat.inch - 14)
             : pw.Text(
                 _safeText(observation.comments),
                 softWrap: true,
-                maxLines: observation.maxLines,
-                overflow: pw.TextOverflow.clip,
                 style: const pw.TextStyle(fontSize: 9, lineSpacing: 2),
               ),
+      ),
+    ],
+  );
+
+  pw.Widget _observationFlow(ObservationBlockSpec observation) => pw.Column(
+    crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+    children: [
+      _borderedText(observation.title, bold: true),
+      pw.Padding(
+        padding: const pw.EdgeInsets.all(7),
+        child: pw.Text(
+          _safeText(observation.comments),
+          softWrap: true,
+          style: const pw.TextStyle(fontSize: 9, lineSpacing: 2),
+        ),
       ),
     ],
   );
